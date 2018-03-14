@@ -16,5 +16,3 @@ libraryDependencies +=  "mysql" % "mysql-connector-java" % "5.1.12"
 // https://mvnrepository.com/artifact/org.kohsuke/github-api
 libraryDependencies += "org.kohsuke" % "github-api" % "1.92"
 
-
-//libraryDependencies ++= "com.typesafe.slick" %% "slick" % "3.2.2"

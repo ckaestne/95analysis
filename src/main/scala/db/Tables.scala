@@ -57,22 +57,22 @@ trait Tables {
    *  @param authorId Database column author_id SqlType(INT)
    *  @param repoId Database column repo_id SqlType(INT)
    *  @param monthidx Database column monthIdx SqlType(INT)
-   *  @param year Database column year SqlType(INT), Default(None)
-   *  @param month Database column month SqlType(INT), Default(None)
-   *  @param activity Database column activity SqlType(INT), Default(None)
-   *  @param activity95 Database column activity95 SqlType(INT), Default(None)
-   *  @param activitysupport Database column activitysupport SqlType(INT), Default(None) */
-  case class `95monthRow`(authorId: Int, repoId: Int, monthidx: Int, year: Option[Int] = None, month: Option[Int] = None, activity: Option[Int] = None, activity95: Option[Int] = None, activitysupport: Option[Int] = None)
+   *  @param year Database column year SqlType(INT)
+   *  @param month Database column month SqlType(INT)
+   *  @param activity Database column activity SqlType(INT)
+   *  @param activity95 Database column activity95 SqlType(INT)
+   *  @param activitysupport Database column activitysupport SqlType(INT) */
+  case class `95monthRow`(authorId: Int, repoId: Int, monthidx: Int, year: Int, month: Int, activity: Int, activity95: Int, activitysupport: Int)
   /** GetResult implicit for fetching `95monthRow` objects using plain SQL queries */
-  implicit def GetResult95monthRow(implicit e0: GR[Int], e1: GR[Option[Int]]): GR[`95monthRow`] = GR{
+  implicit def GetResult95monthRow(implicit e0: GR[Int]): GR[`95monthRow`] = GR{
     prs => import prs._
-    `95monthRow`.tupled((<<[Int], <<[Int], <<[Int], <<?[Int], <<?[Int], <<?[Int], <<?[Int], <<?[Int]))
+    `95monthRow`.tupled((<<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int], <<[Int]))
   }
   /** Table description of table 95month. Objects of this class serve as prototypes for rows in queries. */
   class `95month`(_tableTag: Tag) extends profile.api.Table[`95monthRow`](_tableTag, Some("ghtorrent"), "95month") {
     def * = (authorId, repoId, monthidx, year, month, activity, activity95, activitysupport) <> (`95monthRow`.tupled, `95monthRow`.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(authorId), Rep.Some(repoId), Rep.Some(monthidx), year, month, activity, activity95, activitysupport).shaped.<>({r=>import r._; _1.map(_=> `95monthRow`.tupled((_1.get, _2.get, _3.get, _4, _5, _6, _7, _8)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(authorId), Rep.Some(repoId), Rep.Some(monthidx), Rep.Some(year), Rep.Some(month), Rep.Some(activity), Rep.Some(activity95), Rep.Some(activitysupport)).shaped.<>({r=>import r._; _1.map(_=> `95monthRow`.tupled((_1.get, _2.get, _3.get, _4.get, _5.get, _6.get, _7.get, _8.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
     /** Database column author_id SqlType(INT) */
     val authorId: Rep[Int] = column[Int]("author_id")
@@ -80,16 +80,16 @@ trait Tables {
     val repoId: Rep[Int] = column[Int]("repo_id")
     /** Database column monthIdx SqlType(INT) */
     val monthidx: Rep[Int] = column[Int]("monthIdx")
-    /** Database column year SqlType(INT), Default(None) */
-    val year: Rep[Option[Int]] = column[Option[Int]]("year", O.Default(None))
-    /** Database column month SqlType(INT), Default(None) */
-    val month: Rep[Option[Int]] = column[Option[Int]]("month", O.Default(None))
-    /** Database column activity SqlType(INT), Default(None) */
-    val activity: Rep[Option[Int]] = column[Option[Int]]("activity", O.Default(None))
-    /** Database column activity95 SqlType(INT), Default(None) */
-    val activity95: Rep[Option[Int]] = column[Option[Int]]("activity95", O.Default(None))
-    /** Database column activitysupport SqlType(INT), Default(None) */
-    val activitysupport: Rep[Option[Int]] = column[Option[Int]]("activitysupport", O.Default(None))
+    /** Database column year SqlType(INT) */
+    val year: Rep[Int] = column[Int]("year")
+    /** Database column month SqlType(INT) */
+    val month: Rep[Int] = column[Int]("month")
+    /** Database column activity SqlType(INT) */
+    val activity: Rep[Int] = column[Int]("activity")
+    /** Database column activity95 SqlType(INT) */
+    val activity95: Rep[Int] = column[Int]("activity95")
+    /** Database column activitysupport SqlType(INT) */
+    val activitysupport: Rep[Int] = column[Int]("activitysupport")
 
     /** Primary key of `95month` (database name 95month_PK) */
     val pk = primaryKey("95month_PK", (authorId, repoId, monthidx))
@@ -98,9 +98,9 @@ trait Tables {
   lazy val `95month` = new TableQuery(tag => new `95month`(tag))
 
   /** Entity class storing rows of table `95timezone`
-   *  @param userId Database column user_id SqlType(INT), PrimaryKey
+   *  @param commitId Database column commit_id SqlType(INT), PrimaryKey
    *  @param timezone Database column timezone SqlType(INT) */
-  case class `95timezoneRow`(userId: Int, timezone: Int)
+  case class `95timezoneRow`(commitId: Int, timezone: Int)
   /** GetResult implicit for fetching `95timezoneRow` objects using plain SQL queries */
   implicit def GetResult95timezoneRow(implicit e0: GR[Int]): GR[`95timezoneRow`] = GR{
     prs => import prs._
@@ -108,12 +108,12 @@ trait Tables {
   }
   /** Table description of table 95timezone. Objects of this class serve as prototypes for rows in queries. */
   class `95timezone`(_tableTag: Tag) extends profile.api.Table[`95timezoneRow`](_tableTag, Some("ghtorrent"), "95timezone") {
-    def * = (userId, timezone) <> (`95timezoneRow`.tupled, `95timezoneRow`.unapply)
+    def * = (commitId, timezone) <> (`95timezoneRow`.tupled, `95timezoneRow`.unapply)
     /** Maps whole row to an option. Useful for outer joins. */
-    def ? = (Rep.Some(userId), Rep.Some(timezone)).shaped.<>({r=>import r._; _1.map(_=> `95timezoneRow`.tupled((_1.get, _2.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
+    def ? = (Rep.Some(commitId), Rep.Some(timezone)).shaped.<>({r=>import r._; _1.map(_=> `95timezoneRow`.tupled((_1.get, _2.get)))}, (_:Any) =>  throw new Exception("Inserting into ? projection not supported."))
 
-    /** Database column user_id SqlType(INT), PrimaryKey */
-    val userId: Rep[Int] = column[Int]("user_id", O.PrimaryKey)
+    /** Database column commit_id SqlType(INT), PrimaryKey */
+    val commitId: Rep[Int] = column[Int]("commit_id", O.PrimaryKey)
     /** Database column timezone SqlType(INT) */
     val timezone: Rep[Int] = column[Int]("timezone")
   }
