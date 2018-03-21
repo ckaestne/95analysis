@@ -15,10 +15,10 @@ import scala.concurrent.duration.Duration
 import scala.io.Source
 
 
-object GHTimeAnalysis extends App {
+object GHTimeAnalysis {
 
 
-  val months = for (y <- 2014 to 2017; m <- 1 to 12)
+  val months = for (y <- 2012 to 2017; m <- 1 to 12)
     yield ZonedDateTime.of(y, m, 1, 0, 0, 0, 0, ZoneOffset.UTC)
   val monthsi = months.zipWithIndex
 
@@ -27,14 +27,20 @@ object GHTimeAnalysis extends App {
 
 
   def getTimezone(userId: Int): Option[Int] = {
-    val commitTzs = for (tz <- Tables.`95timezone`; c <- Tables.Commits;
+    val commitTzs = for (tz <- Tables.`95timezone`; c <- Tables.Commits
                          if tz.commitId === c.id; if c.authorId===userId) yield tz.timezone
 
     eval(commitTzs.take(3).avg.result)
   }
 
-  def analyzeProject(repo: Tables.ProjectsRow): Unit = {
-    println("## analyzing "+repo.name)
+  def analyzeProject_(slug: String): Unit = {
+    val repoURL = "https://api.github.com/repos/"+slug
+    val repos = eval(Tables.Projects.filter(_.url=== repoURL).result).map(p=>Project(p.id, p.url.getOrElse(""), p.name))
+    for (repo<-repos)
+        analyzeProject(repo)
+  }
+  def analyzeProject(repo: Project): Unit = {
+    println(s"## analyzing ${repo.name} (${repo.id})")
     val repoId = repo.id
     eval(sqlu"delete from `95month` where repo_id=$repoId")
     //actions: userid, timestamp, isSupport
@@ -48,14 +54,14 @@ object GHTimeAnalysis extends App {
 
 
     val allActions = actionCommits ++ actionIssueCreation ++ actionIssueAction ++ actionCommitComment
-    val allActionsSince2014 = allActions.filter(
-      a => a._2 > Timestamp.valueOf("2014-1-1 00:00:00") && a._2 < Timestamp.valueOf("2018-1-1 00:00:00")
+    val allActionsSince2012 = allActions.filter(
+      a => a._2 > Timestamp.valueOf("2012-1-1 00:00:00") && a._2 < Timestamp.valueOf("2018-1-1 00:00:00")
     ).filter(_._1 > 0)
 
-    val mostActiveDevelopers = allActionsSince2014.groupBy(_._1).map(g => (g._1, g._2.length)).sortBy(_._2.desc).take(6)
+    val mostActiveDevelopers = allActionsSince2012.groupBy(_._1).map(g => (g._1, g._2.length)).sortBy(_._2.desc).take(6)
 
 
-    def analyzeDeveloper(repo: Tables.ProjectsRow, userId: Int): Unit = {
+    def analyzeDeveloper(repo: Project, userId: Int): Unit = {
 //      println(s"analyzing dev $userId")
 
       val timeZone = getTimezone(userId)
@@ -66,7 +72,7 @@ object GHTimeAnalysis extends App {
         println(s"  time zone for developer $userId " + timeZone.get)
       }
 
-      val developerActions = eval(allActionsSince2014.filter(_._1 === userId).sortBy(_._2).result)
+      val developerActions = eval(allActionsSince2012.filter(_._1 === userId).sortBy(_._2).result)
 
 
       months.zipWithIndex
@@ -81,7 +87,7 @@ object GHTimeAnalysis extends App {
         val actions = actionPerMonth(month._2)
         Tables.`95month` += `95monthRow`(userId, repo.id, month._2,
           month._1.getYear, month._1.getMonthValue,
-          actions.length, actions.filter(a => Util95.is95(a._2, timeZone.get)).length, actions.filter(_._3).length
+          actions.length, actions.count(a => Util95.is95(a._2, timeZone.get)), actions.count(_._3)
         )
       }
       eval(DBIO.sequence(inserts))
@@ -104,19 +110,39 @@ object GHTimeAnalysis extends App {
   def eval[T](q: DBIOAction[T, NoStream, Nothing]): T =
     Await.result(db.run(q), Duration.Inf)
 
-  try {
+  def analyzeDeveloper(logins: Set[String]) = {
+        //analyze by developers
+        val theirRepos =
+          for (c<-Tables.Commits; p<-Tables.Projects; u<-Tables.Users
+            if c.projectId === p.id; if c.authorId===u.id; if u.login inSet logins) yield (p.id, p.url, p.name)
+        val devRepos = eval(theirRepos.distinct.result).map(p=>Project.apply(p._1, p._2.getOrElse(""), p._3))
 
-    val repoURLs = (for (line<-Source.fromFile("../data/projects").getLines()) yield "https://api.github.com/repos/"+line).toSet
-    val repos = eval(Tables.Projects.filter(_.url inSet repoURLs).result)
+        for (repo<-devRepos)
+          if (eval(Tables.`95month`.filter(_.repoId===repo.id).map(_.repoId).distinct.result).size==0)
+            analyzeProject(repo)
+          else println(s"skipping project ${repo.name}")
+  }
 
-    for (repo<-repos)
-      analyzeProject(repo)
-    // ...
-  } finally db.close
+  def main(args: Array[String]): Unit = {
 
+    try {
+      //analyze by projects
+      val repoURLs = Set("https://api.github.com/repos/moment/moment", "https://api.github.com/repos/moment/moment-timezone") // (for (line<-Source.fromFile("../data/projects").getLines()) yield "https://api.github.com/repos/"+line).toSet
+      val repos = eval(Tables.Projects.filter(_.url inSet repoURLs).result).map(p=>Project(p.id, p.url.getOrElse(""), p.name))
+      for (repo<-repos)
+        if (eval(Tables.`95month`.filter(_.repoId===repo.id).map(_.repoId).distinct.result).size==0)
+          analyzeProject(repo)
+        else println(s"skipping project ${repo.name}, ${repo.id}")
+
+
+      // ...
+    } finally db.close
+
+  }
 
 }
 
+case class Project(id: Int, url: String, name: String)
 
 object Util95 {
 

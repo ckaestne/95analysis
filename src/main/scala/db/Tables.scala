@@ -1376,11 +1376,11 @@ trait Tables {
    *  @param deleted Database column deleted SqlType(BIT), Default(false)
    *  @param updatedAt Database column updated_at SqlType(TIMESTAMP)
    *  @param slug Database column slug SqlType(INT), Default(None) */
-  case class ProjectsRow(id: Int, url: Option[String] = None, ownerId: Option[Int] = None, name: String, description: Option[String] = None, language: Option[String] = None, createdAt: java.sql.Timestamp, forkedFrom: Option[Int] = None, deleted: Boolean = false, updatedAt: java.sql.Timestamp, slug: Option[Int] = None)
+  case class ProjectsRow(id: Int, url: Option[String] = None, ownerId: Option[Int] = None, name: String, description: Option[String] = None, language: Option[String] = None, createdAt: java.sql.Timestamp, forkedFrom: Option[Int] = None, deleted: Boolean = false, updatedAt: Option[java.sql.Timestamp], slug: Option[Int] = None)
   /** GetResult implicit for fetching ProjectsRow objects using plain SQL queries */
   implicit def GetResultProjectsRow(implicit e0: GR[Int], e1: GR[Option[String]], e2: GR[Option[Int]], e3: GR[String], e4: GR[java.sql.Timestamp], e5: GR[Boolean]): GR[ProjectsRow] = GR{
     prs => import prs._
-    ProjectsRow.tupled((<<[Int], <<?[String], <<?[Int], <<[String], <<?[String], <<?[String], <<[java.sql.Timestamp], <<?[Int], <<[Boolean], <<[java.sql.Timestamp], <<?[Int]))
+    ProjectsRow.tupled((<<[Int], <<?[String], <<?[Int], <<[String], <<?[String], <<?[String], <<[java.sql.Timestamp], <<?[Int], <<[Boolean], <<[Option[java.sql.Timestamp]], <<?[Int]))
   }
   /** Table description of table projects. Objects of this class serve as prototypes for rows in queries. */
   class Projects(_tableTag: Tag) extends profile.api.Table[ProjectsRow](_tableTag, Some("ghtorrent"), "projects") {
@@ -1407,7 +1407,7 @@ trait Tables {
     /** Database column deleted SqlType(BIT), Default(false) */
     val deleted: Rep[Boolean] = column[Boolean]("deleted", O.Default(false))
     /** Database column updated_at SqlType(TIMESTAMP) */
-    val updatedAt: Rep[java.sql.Timestamp] = column[java.sql.Timestamp]("updated_at")
+    val updatedAt: Rep[Option[java.sql.Timestamp]] = column[java.sql.Timestamp]("updated_at")
     /** Database column slug SqlType(INT), Default(None) */
     val slug: Rep[Option[Int]] = column[Option[Int]]("slug", O.Default(None))
 
